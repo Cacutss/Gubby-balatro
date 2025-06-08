@@ -60,11 +60,48 @@ SMODS.Joker {
     pos = {x=0,y=0},
     calculate = function(self,card,context)
 	if context.setting_blind then
+	    local last_joker = nil
 	    for i,value in ipairs(G.jokers.cards) do
 	    	if card.ability.extra.jokers[value.config.center_key] then
+		    last_joker = value 
+		end
+		if value.config.center_key == "j_diet_cola" then
+		    last_joker = value
+		    if G.jokers.config.card_limit > #G.jokers.cards-1 then
+		    	copy = copy_card(card)
+			G.jokers.cards[#G.jokers.cards+1] = copy
+		    end
+		end
+		if last_joker ~= nil then 
+		    
 		    G.E_MANAGER:add_event(Event({
-			
+			func = function()
+			    play_sound('tarot1')
+			    last_joker.T.r = -0.2
+			    last_joker:juice_up(0.3, 0.4)
+			    last_joker.states.drag.is = true
+			    last_joker.children.center.pinch.x = true
+			    -- This part destroys the card.
+			    G.E_MANAGER:add_event(Event({
+				    trigger = 'after',
+				    delay = 0.3,
+				    blockable = false,
+				    func = function()
+					    G.hand:change_size(card.ability.extra.hands)
+					    play_sound('Gubby_yummers')
+					    G.jokers:remove_card(last_joker)
+					    last_joker:remove()
+					    last_joker= nil
+					    return true;
+				    end
+			    }))
+			    return true	
+		    end				
 		    }))
+		    card.ability.extra.hand_size = card.ability.extra.hand_size + 1
+		    return{
+			    message = "Yummers!"
+		    }
 	    	end
 	    end
 	end	
