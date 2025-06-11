@@ -10,19 +10,15 @@ SMODS.Sound{
     path = 'yummers.ogg'
 }
 
-gubbytext = {
-    name = "Gubby",
-    text = {'When round starts consume',
-	    'an {V:1}edible{} joker and gain',
-	    'Permanent {C:attention}+#1# hand size{}',
-	    '{C:inactive}(Currently {C:attention}+#2#{}{C:inactive} Hand size)'
-    }
+SMODS.Sound{
+    key = "ahh",
+    path = "ahh.ogg"
 }
 
 SMODS.Joker {
     key = "gubby",
     atlas = "Gubbyatlas",
-    loc_txt = gubbytext,
+    loc_txt = {set = "Joker",key = "j_Gubby_gubby"},
     unlocked = true,
     discovered = true,
     config = {
@@ -42,7 +38,7 @@ SMODS.Joker {
 	}
     },
     loc_vars = function(self, info_queue, card)
-	info_queue[#info_queue+1] = gubbytext
+	info_queue[#info_queue+1] = {set = "Other",key = "Gubby_edible"} 
 	return{ 
 	    vars = {
 		card.ability.extra.hands,
@@ -56,7 +52,7 @@ SMODS.Joker {
     end,
     rarity = 3,
     cost = 8,
-    blueprint_compat = true,
+    blueprint_compat = false,
     pos = {x=0,y=0},
     calculate = function(self,card,context)
 	local last_joker = nil
@@ -96,9 +92,10 @@ SMODS.Joker {
 			blockable = false,
 			func = function()
 			    G.hand:change_size(card.ability.extra.hands)
-			    play_sound('Gubby_yummers',pseudorandom('gubby')*3)   
-			    if last_joker.config.center_key == "j_diet_cola"then
-				if G.jokers.config.card_limit > #G.jokers.cards-1 then
+			    play_sound('Gubby_yummers',pseudorandom('gubby',70,150)/100,G.SETTINGS.SOUND.game_sounds_volume/100)   
+			    if last_joker.config.center_key == "j_diet_cola" then
+				if not last_joker.edition or last_joker.edition.key ~= "e_negative" or 
+				(last_joker.edition.key == "e_negative" and G.jokers.config.card_limit > #G.jokers.cards) then
 				    G.E_MANAGER:add_event(Event({
 					func = function()
 					    SMODS.add_card({
@@ -113,11 +110,11 @@ SMODS.Joker {
 			    end
 			    G.jokers:remove_card(last_joker)
 			    last_joker:remove()
-			    last_joker= nil
-			    return true
+			    last_joker = nil
+			return true
 			end
 		    }))
-		    return true
+		    return true	
 		end
 	    }))
 	    card.ability.extra.hand_size = card.ability.extra.hand_size + 1
@@ -126,5 +123,8 @@ SMODS.Joker {
 		message_card = card
 	    }
 	end
+    end,
+    remove_from_deck = function(self,card,from_debuff)
+	play_sound('Gubby_ahh',pseudorandom('gubby',80,130)/100,G.SETTINGS.SOUND.game_sounds_volume/100)
     end
 }
